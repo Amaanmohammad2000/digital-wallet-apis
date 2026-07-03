@@ -1,5 +1,10 @@
 module.exports = {
   up: async (queryInterface) => {
+    const [existing] = await queryInterface.sequelize.query(
+      "SELECT 1 FROM exchange_rate WHERE base_currency = 'INR' LIMIT 1"
+    );
+    if (existing.length > 0) return;
+
     const now = new Date();
     await queryInterface.bulkInsert('exchange_rate', [
       { base_currency: 'INR', target_currency: 'USD', rate: 0.01197, updated_at: now },
