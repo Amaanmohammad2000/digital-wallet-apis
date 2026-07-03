@@ -1,14 +1,14 @@
 {
   "name": "digital-wallet-apis",
   "version": "1.0.0",
-  "description": "Mini digital wallet system API — CodeGama Node.js Developer assignment",
+  "description": "Mini digital wallet system API \u2014 CodeGama Node.js Developer assignment",
   "main": "./server/app.js",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "dev": "nodemon ./server/app.js",
-    "start": "npx sequelize db:migrate && npx sequelize db:seed:all && node ./server/app.js",
+    "dev": "node init && nodemon ./server/app.js",
+    "start": "node init && npx sequelize db:migrate && npx sequelize db:seed:all && node ./server/app.js",
     "migrate": "npx sequelize db:migrate",
     "migrate:undo": "npx sequelize db:migrate:undo",
     "seed": "npx sequelize db:seed:all",
