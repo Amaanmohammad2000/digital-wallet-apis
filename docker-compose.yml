@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: wallet_service
+    image: node:20.15
+    working_dir: /wallet_service
+    volumes:
+      - .:/wallet_service
+    ports:
+      - "${PORT}:${PORT}"
+    command: sh -c "npm install && npm run start"
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      REDIS_HOST: redis
+    depends_on:
+      - db
+      - redis
+    networks:
+      - wallet_network
+
+  db:
+    container_name: wallet_db
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - wallet_network
+
+  redis:
+    container_name: wallet_redis
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    networks:
+      - wallet_network
+
+networks:
+  wallet_network:
+    driver: bridge
+
+volumes:
+  db_data:

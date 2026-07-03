@@ -1,0 +1,365 @@
+{
+  "info": {
+    "name": "Digital Wallet API",
+    "description": "Mini digital wallet system: auth, wallet management, fund transactions, transaction history, multi-currency, fraud detection, rate limiting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "recipient_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token', body.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amaan\",\n  \"email\": \"amaan@example.com\",\n  \"phoneNumber\": \"+919876543210\",\n  \"password\": \"SecurePass123!\",\n  \"defaultCurrency\": \"INR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Recipient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('recipient_token', body.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Priya\",\n  \"email\": \"priya@example.com\",\n  \"phoneNumber\": \"+919876500000\",\n  \"password\": \"SecurePass123!\",\n  \"defaultCurrency\": \"INR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token', body.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "description": "Rate limited per-IP: 10 requests/minute (register and login share this limiter, since neither is authenticated yet). Firing this 11+ times within 60 seconds returns 429 with a 'Rate limit exceeded' message.",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+919876543210\",\n  \"password\": \"SecurePass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get current user profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/profile", "host": ["{{base_url}}"], "path": ["auth", "profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "Get balance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/wallet/balance?currency=USD",
+              "host": ["{{base_url}}"],
+              "path": ["wallet", "balance"],
+              "query": [{ "key": "currency", "value": "USD" }]
+            }
+          }
+        },
+        {
+          "name": "Add funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/add-funds", "host": ["{{base_url}}"], "path": ["wallet", "add-funds"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 200,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Transfer to another user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/transfer", "host": ["{{base_url}}"], "path": ["wallet", "transfer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toPhoneNumber\": \"+919876500000\",\n  \"amount\": 500,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Transaction history",
+          "request": {
+            "description": "Each entry includes a 'counterparty' object (name + phoneNumber) for transfer_in/transfer_out rows, resolved via the transaction's counterparty_wallet_id. It's null for credit (add-funds) and withdrawal rows, since those don't involve another user.",
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/wallet/transactions?page=1&perPage=10&type=credit",
+              "host": ["{{base_url}}"],
+              "path": ["wallet", "transactions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "perPage", "value": "10" },
+                { "key": "type", "value": "credit" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error cases",
+      "description": "Run these after Register + Login so {{token}} is set. Each demonstrates a specific validation/business-rule rejection.",
+      "item": [
+        {
+          "name": "Withdraw more than balance (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 999999,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Transfer to self (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/transfer", "host": ["{{base_url}}"], "path": ["wallet", "transfer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toPhoneNumber\": \"+919876543210\",\n  \"amount\": 10,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Transfer to nonexistent recipient (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/transfer", "host": ["{{base_url}}"], "path": ["wallet", "transfer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toPhoneNumber\": \"+910000000000\",\n  \"amount\": 10,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register with weak password (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Weak\",\n  \"email\": \"weak-{{$guid}}@example.com\",\n  \"phoneNumber\": \"+911234567890\",\n  \"password\": \"weakpass\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Wallet route without token (401)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/wallet/balance", "host": ["{{base_url}}"], "path": ["wallet", "balance"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fraud detection & limits",
+      "description": "Run requests 1-6 in order, within a few minutes of each other, using the same {{token}} (daily limit and fraud window are per-user). Request 5 should return flagged: true (4th withdrawal >= 20% of the daily limit within a 5-minute window). Request 6 should return 400 (cumulative spend for the day would exceed the 500000 default daily limit).",
+      "item": [
+        {
+          "name": "1. Add funds for fraud demo (700000 INR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/add-funds", "host": ["{{base_url}}"], "path": ["wallet", "add-funds"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 700000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. High-value withdrawal #1 (110000 INR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 110000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. High-value withdrawal #2 (110000 INR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 110000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. High-value withdrawal #3 (110000 INR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 110000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. High-value withdrawal #4 -> flagged: true (110000 INR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 110000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Withdraw again -> daily limit exceeded (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/wallet/withdraw", "host": ["{{base_url}}"], "path": ["wallet", "withdraw"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 70000,\n  \"currency\": \"INR\",\n  \"referenceId\": \"{{$guid}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}
